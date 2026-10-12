@@ -3,6 +3,10 @@ from dataclasses import dataclass
 
 from langchain_ollama import OllamaEmbeddings
 from openai import OpenAI
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 @dataclass(frozen=True)

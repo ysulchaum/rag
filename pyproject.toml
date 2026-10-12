@@ -12,6 +12,7 @@ dependencies = [
     "langchain-postgres>=0.0.14",
     "langchain-ollama>=0.3.0",
     "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
     "ruff>=0.16.10",
     "typesafe-ai>=0.1.0",
 ]

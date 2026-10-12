@@ -33,11 +33,12 @@ def initialize_database() -> None:
 	_get_vector_store()
 
 
-def add_document(content: str) -> str:
+def add_document(content: str, document_id: str | None = None) -> str:
 	if not content.strip():
 		raise ValueError("Document content cannot be empty.")
 
-	document_ids = _get_vector_store().add_texts([content])
+	ids = [document_id] if document_id is not None else None
+	document_ids = _get_vector_store().add_texts([content], ids=ids)
 	return document_ids[0]
 
 
