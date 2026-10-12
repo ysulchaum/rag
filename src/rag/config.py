@@ -9,7 +9,7 @@ from openai import OpenAI
 class Settings:
 	database_url: str = os.getenv(
 		"DATABASE_URL",
-		"postgresql://rag_user:rag_password@localhost:5432/rag_db",
+		"postgresql://rag_user:rag_password@localhost:5450/rag_db",
 	)
 	deepseek_api_key: str | None = os.getenv("DEEPSEEK_API_KEY")
 	deepseek_base_url: str = os.getenv(

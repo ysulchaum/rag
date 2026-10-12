@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: rag_password
       POSTGRES_DB: rag_db
     ports:
-      - "5432:5432"
+      - "5450:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,5 +18,14 @@ services:
       timeout: 5s
       retries: 5
 
+  ollama:
+    image: ollama/ollama
+    container_name: rag_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   pgdata:
+  ollama_data:
