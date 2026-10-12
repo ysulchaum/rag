@@ -1,45 +1,53 @@
-from typing import TypedDict, List
-from langgraph.graph import StateGraph, END
-from src.rag.jev_router import route_query_with_jev
-from src.rag.database import search_vector_db
-from src.rag.config import llm_client
+from typing import TypedDict
+
+from langgraph.graph import END, StateGraph
+
+from .config import llm_client
+from .database import search_vector_db
+from .jev_router import route_query_with_jev
+
 
 # 1. State Definition
 class RAGState(TypedDict):
     query: str
     needs_retrieval: bool
-    context_docs: List[str]
+    context_docs: list[str]
     generation: str
+
 
 # 2. Nodes
 def classification_node(state: RAGState):
-    jev_result = route_query_with_jev(state["query"])
-    # Pull the Boolean value out of Jev's strict type response
-    needs_retrieval = jev_result.get("needs_retrieval", {}).get("value", True)
+    needs_retrieval = route_query_with_jev(state["query"])
     return {"needs_retrieval": needs_retrieval}
+
 
 def retrieval_node(state: RAGState):
     docs = search_vector_db(state["query"])
     return {"context_docs": docs}
 
+
 def generation_node(state: RAGState):
     context = "\n".join(state.get("context_docs", []))
-    
-    prompt = f"""
-    Context Info: {context if context else 'No context retrieved.'}
-    User Query: {state['query']}
-    
-    Provide an accurate, concise answer based on the context information above.
-    """
-    # Standard LLM execution string text generation
-    response = llm_client.generate(prompt) 
+
+    prompt = f"""Answer the user's question accurately and concisely.
+Use the context when provided. If the context does not contain the answer, say so.
+Respond in the same language as the question.
+
+Context:
+{context or "No context retrieved."}
+
+Question: {state["query"]}
+"""
+    response = llm_client.generate(prompt)
     return {"generation": response}
+
 
 # 3. Conditional Routing Logic
 def routing_edge(state: RAGState):
     if state["needs_retrieval"]:
         return "retrieve"
     return "generate"
+
 
 # 4. Building the Graph compilation
 workflow = StateGraph(RAGState)
@@ -55,8 +63,8 @@ workflow.add_conditional_edges(
     routing_edge,
     {
         "retrieve": "retrieve",
-        "generate": "generate"
-    }
+        "generate": "generate",
+    },
 )
 workflow.add_edge("retrieve", "generate")
 workflow.add_edge("generate", END)
