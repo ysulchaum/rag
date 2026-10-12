@@ -13,10 +13,11 @@ Set `DEEPSEEK_API_KEY` for chat generation. Embeddings run locally through
 Ollama with the `bge-m3` model. Change the Ollama endpoint or model with
 `EMBEDDING_BASE_URL` or `EMBEDDING_MODEL`.
 
-Run `uv run rag` from this directory to initialize pgvector, embed
-`src/rag/input_files/demo.txt`, and start an interactive question prompt. The
-document is re-indexed with the same ID on each run. Type `exit` or `quit` to
-leave. An alternate UTF-8 text file can be supplied with `uv run rag path/to/file.txt`.
+Run `uv run rag` from this directory to initialize pgvector, embed all `.txt`
+and `.md` files under `src/rag/input_files`, and start an interactive question
+prompt. Files are re-indexed with the same IDs on each run. Type `exit` or
+`quit` to leave. Pass a UTF-8 text file or directory to ingest a different
+source, such as `uv run rag path/to/documents`.
 
 Use `rag.database.add_document(content)` to insert a document (it returns a
 string ID) and `rag.database.search_vector_db(query)` to retrieve the closest

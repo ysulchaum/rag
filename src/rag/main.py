@@ -22,28 +22,42 @@ Question: {query}
 
 
 def main() -> None:
-    default_document = Path(__file__).parent / "input_files" / "demo.txt"
+    default_source = Path(__file__).parent / "input_files"
     parser = argparse.ArgumentParser(
-        description="Ingest a document and ask questions about it."
+        description="Ingest text documents and ask questions about them."
     )
     parser.add_argument(
-        "document",
+        "source",
         nargs="?",
         type=Path,
-        default=default_document,
-        help=f"UTF-8 text file to ingest (default: {default_document.name})",
+        default=default_source,
+        help="UTF-8 text/Markdown file or directory (default: input_files)",
     )
     args = parser.parse_args()
 
-    if not args.document.is_file():
-        parser.error(f"Document not found: {args.document}")
+    if args.source.is_file():
+        documents = [args.source]
+    elif args.source.is_dir():
+        documents = sorted(
+            (
+                path
+                for path in args.source.rglob("*")
+                if path.is_file() and path.suffix.lower() in {".txt", ".md"}
+            ),
+            key=lambda path: str(path).casefold(),
+        )
+        if not documents:
+            parser.error(f"No .txt or .md files found in {args.source}")
+    else:
+        parser.error(f"Source not found: {args.source}")
 
-    content = args.document.read_text(encoding="utf-8")
+    document_contents = [(path, path.read_text(encoding="utf-8")) for path in documents]
     initialize_database()
-    document_id = str(uuid5(NAMESPACE_URL, str(args.document.resolve())))
-    add_document(content, document_id=document_id)
+    for path, content in document_contents:
+        document_id = str(uuid5(NAMESPACE_URL, str(path.resolve())))
+        add_document(content, document_id=document_id)
     print(
-        f"Indexed {args.document} in pgvector. Ask a question, or type 'exit' to quit."
+        f"Indexed {len(documents)} files in pgvector. Ask a question, or type 'exit' to quit."
     )
 
     while True:
