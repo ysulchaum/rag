@@ -42,6 +42,10 @@ def add_document(content: str, document_id: str | None = None) -> str:
 	return document_ids[0]
 
 
+def delete_document(document_id: str) -> None:
+	_get_vector_store().delete(ids=[document_id], collection_only=True)
+
+
 def search_vector_db(query: str, limit: int = 5) -> list[str]:
 	if limit < 1:
 		raise ValueError("Search limit must be at least 1.")

@@ -12,3 +12,5 @@ wheels/
 .env
 
 /src/rag/input_files
+
+/src/rag/log

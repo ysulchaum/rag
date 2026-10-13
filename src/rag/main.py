@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
-from .database import add_document, initialize_database
+from .database import add_document, delete_document, initialize_database
 from .graph import app as rag_graph
 from .jev_router import JevAuthenticationError
 
@@ -19,6 +19,10 @@ def answer_question(query: str) -> str:
     return result["generation"]
 
 
+def _document_id(path: Path) -> str:
+    return str(uuid5(NAMESPACE_URL, str(path.resolve())))
+
+
 def main() -> None:
     default_source = Path(__file__).parent / "input_files"
     parser = argparse.ArgumentParser(
@@ -31,7 +35,18 @@ def main() -> None:
         default=default_source,
         help="UTF-8 text/Markdown file or directory (default: input_files)",
     )
+    parser.add_argument(
+        "--delete",
+        type=Path,
+        metavar="FILE",
+        help="Delete a previously indexed file by its path; the file may already be removed",
+    )
     args = parser.parse_args()
+
+    if args.delete is not None:
+        delete_document(_document_id(args.delete))
+        print(f"Deleted indexed document for {args.delete}, if it existed.")
+        return
 
     if args.source.is_file():
         documents = [args.source]
@@ -52,8 +67,7 @@ def main() -> None:
     document_contents = [(path, path.read_text(encoding="utf-8")) for path in documents]
     initialize_database()
     for path, content in document_contents:
-        document_id = str(uuid5(NAMESPACE_URL, str(path.resolve())))
-        add_document(content, document_id=document_id)
+        add_document(content, document_id=_document_id(path))
     print(
         f"Indexed {len(documents)} files in pgvector. Ask a question, or type 'exit' to quit."
     )

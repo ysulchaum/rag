@@ -22,6 +22,12 @@ prompt. Files are re-indexed with the same IDs on each run. Type `exit` or
 `quit` to leave. Pass a UTF-8 text file or directory to ingest a different
 source, such as `uv run rag path/to/documents`.
 
+To remove a file's indexed document, run `uv run rag --delete
+src/rag/input_files/file1.txt`. The source file may already be deleted. If the
+file still exists under `input_files`, the next normal startup will index it
+again. To remove only some text, edit the source file and run `uv run rag`; its
+existing vector record will be updated.
+
 Use `rag.database.add_document(content)` to insert a document (it returns a
 string ID) and `rag.database.search_vector_db(query)` to retrieve the closest
 documents.
