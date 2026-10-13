@@ -1,7 +1,9 @@
 # RAG
 
 This project stores document embeddings in PostgreSQL with LangChain Postgres
-and pgvector, and uses DeepSeek for answer generation.
+and pgvector, and uses DeepSeek for answer generation. Source documents are
+split into 500-character chunks with 80-character overlap before indexing; up to
+five matching chunks are included as context for each answer.
 
 Start PostgreSQL and Ollama with `docker compose up -d`. Download the embedding
 model into the Ollama container once with `docker compose exec ollama ollama pull
