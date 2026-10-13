@@ -5,6 +5,7 @@ from uuid import NAMESPACE_URL, uuid5
 from .database import add_document, delete_document, initialize_database
 from .graph import app as rag_graph
 from .jev_router import JevAuthenticationError
+from .log import append_query_log
 
 
 def answer_question(query: str) -> str:
@@ -16,6 +17,7 @@ def answer_question(query: str) -> str:
             "generation": "",
         }
     )
+    append_query_log(result)
     return result["generation"]
 
 

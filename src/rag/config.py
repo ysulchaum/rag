@@ -1,10 +1,9 @@
 import os
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
 from langchain_ollama import OllamaEmbeddings
 from openai import OpenAI
-from dotenv import load_dotenv
-
 
 load_dotenv()
 
@@ -31,11 +30,21 @@ class Settings:
 settings = Settings()
 
 
+@dataclass(frozen=True)
+class TokenUsage:
+	input_tokens: int | None
+	output_tokens: int | None
+	total_tokens: int | None
+
+
 class DeepSeekClient:
 	def __init__(self, configuration: Settings) -> None:
 		self.configuration = configuration
 
 	def generate(self, prompt: str) -> str:
+		return self.generate_with_usage(prompt)[0]
+
+	def generate_with_usage(self, prompt: str) -> tuple[str, TokenUsage]:
 		if not self.configuration.deepseek_api_key:
 			raise RuntimeError("Set DEEPSEEK_API_KEY to use DeepSeek generation.")
 
@@ -50,7 +59,12 @@ class DeepSeekClient:
 		content = response.choices[0].message.content
 		if content is None:
 			raise RuntimeError("DeepSeek returned an empty response.")
-		return content
+		usage = response.usage
+		return content, TokenUsage(
+			input_tokens=usage.prompt_tokens if usage else None,
+			output_tokens=usage.completion_tokens if usage else None,
+			total_tokens=usage.total_tokens if usage else None,
+		)
 
 
 embedding_client = OllamaEmbeddings(

@@ -1,13 +1,34 @@
 import os
+from dataclasses import dataclass
 
 import requests
+
+JEV_MODEL = "jev-latest"
 
 
 class JevAuthenticationError(RuntimeError):
     pass
 
 
-def route_query_with_jev(query: str) -> bool:
+@dataclass(frozen=True)
+class JevRouteResult:
+    needs_retrieval: bool
+    input_tokens: int | None
+    output_tokens: int | None
+    total_tokens: int | None
+    model: str
+
+
+def _token_count(usage: object, name: str) -> int | None:
+    if not isinstance(usage, dict):
+        return None
+    value = usage.get(name)
+    if type(value) is int and value >= 0:
+        return value
+    return None
+
+
+def classify_query_with_jev(query: str) -> JevRouteResult:
     """
     Uses TypeSafe Jev (System One Classifier) to determine if a query requires database retrieval.
     """
@@ -23,7 +44,7 @@ def route_query_with_jev(query: str) -> bool:
 
     # Passing the text query as input state alongside a typed Noul (Boolean primitive)
     payload = {
-        "model": "jev-latest",
+        "model": JEV_MODEL,
         "state": query,
         "questions": {
             "needs_retrieval": {
@@ -44,10 +65,22 @@ def route_query_with_jev(query: str) -> bool:
         )
     response.raise_for_status()
 
+    response_data = response.json()
     noul_value = (
-        response.json().get("answers", {}).get("needs_retrieval", {}).get("noul")
+        response_data.get("answers", {}).get("needs_retrieval", {}).get("noul")
     )
     if not isinstance(noul_value, (int, float)):
         raise TypeError("Jev response did not include a needs_retrieval Noul value.")
 
-    return noul_value >= 0.2
+    usage = response_data.get("usage")
+    return JevRouteResult(
+        needs_retrieval=noul_value >= 0.2,
+        input_tokens=_token_count(usage, "input_tokens"),
+        output_tokens=_token_count(usage, "output_tokens"),
+        total_tokens=_token_count(usage, "total_tokens"),
+        model=JEV_MODEL,
+    )
+
+
+def route_query_with_jev(query: str) -> bool:
+    return classify_query_with_jev(query).needs_retrieval

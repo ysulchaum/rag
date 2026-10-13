@@ -22,6 +22,10 @@ prompt. Files are re-indexed with the same IDs on each run. Type `exit` or
 `quit` to leave. Pass a UTF-8 text file or directory to ingest a different
 source, such as `uv run rag path/to/documents`.
 
+Each completed question is appended to `src/rag/log/rag_query_log.xlsx`,
+including the routing result, retrieved context, answer, model names, and token
+usage reported by Jev and DeepSeek. Missing provider usage is left blank.
+
 To remove a file's indexed document, run `uv run rag --delete
 src/rag/input_files/file1.txt`. The source file may already be deleted. If the
 file still exists under `input_files`, the next normal startup will index it
